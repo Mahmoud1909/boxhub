@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "514022700404",
+    "project_id": "star-life-5bcb5",
+    "storage_bucket": "star-life-5bcb5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:514022700404:android:dcb7e70795fefc833ce821",
+        "android_client_info": {
+          "package_name": "com.example.boxhub"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "514022700404-pimsh4fi29gv086q6ceosia1ersrp4ct.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9J60dFa8t-RdDDVuHC6_QlEQD0nj4Wko"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "514022700404-pimsh4fi29gv086q6ceosia1ersrp4ct.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
