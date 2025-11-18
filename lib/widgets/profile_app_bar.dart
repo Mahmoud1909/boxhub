@@ -2,7 +2,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
-const Color brandColor = Color(0xFFF3692F); // main accent (used for borders/shadows/badges)
+const Color brandColor = Color(0xFFF47622); // main accent (used for borders/shadows/badges)
 
 class ProfileAppBar extends StatefulWidget implements PreferredSizeWidget {
   final Map<String, dynamic> userData;

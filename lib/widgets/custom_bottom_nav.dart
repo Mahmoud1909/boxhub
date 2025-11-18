@@ -1,7 +1,7 @@
 // lib/widgets/custom_bottom_nav.dart
 import 'package:flutter/material.dart';
 
-const Color brandColor = Color(0xFFF3692F);
+const Color brandColor = Color(0xFFF47622);
 
 class CustomBottomNav extends StatefulWidget {
   final int initialIndex;

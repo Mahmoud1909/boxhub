@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../widgets/profile_app_bar.dart';
 import '../widgets/custom_bottom_nav.dart';
 
-const Color brandColor = Color(0xFFF3692F);
+const Color brandColor = Color(0xFFF47622);
 
 class MainScreen extends StatefulWidget {
   final Map<String, dynamic> userData;

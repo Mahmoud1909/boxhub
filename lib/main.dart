@@ -7,13 +7,13 @@ import 'package:lottie/lottie.dart';
 import 'firebase_options.dart';
 import 'screens/signup_screen.dart';
 
-const Color brandColor = Color(0xFFF3692F);
+const Color brandColor = Color(0xFFF47622);
+//const Color brandColor = Color(f47622);
+//const Color brandColor = Color(0xFFF47622);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Make the system status bar match the app background (top bar with time/battery).
-  // This ensures the status bar uses the same brand color and shows light icons.
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
     statusBarColor: brandColor,
     statusBarIconBrightness: Brightness.light,
@@ -74,7 +74,6 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
   bool _navigated = false;
 
-  // fallback to avoid stuck splash (keeps a little longer to allow animation play)
   static const Duration fallbackDuration = Duration(seconds: 8);
 
   late final AnimationController _scaleController;

@@ -16,7 +16,7 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderStateMixin {
   // Primary brand color requested
-  static const Color brandColor = Color(0xFFF3692F); // #F3692F
+  static const Color brandColor = Color(0xFFF47622); // #F3692F
 
   bool _loading = false;
   late final AnimationController _animController;
