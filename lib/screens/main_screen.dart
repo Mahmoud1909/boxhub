@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../widgets/profile_app_bar.dart';
 import '../widgets/custom_bottom_nav.dart';
 
+const Color brandColor = Color(0xFFF3692F);
+
 class MainScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
 
@@ -15,24 +17,16 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
+  final List<Widget Function(Map<String, dynamic>)> _pages = [
+        (user) => HomePage(userData: user),
+        (user) => OrdersPage(userData: user),
+  ];
+
   @override
   void initState() {
     super.initState();
     debugPrint('MainScreen: initState -> initializing main screen.');
     debugPrint('MainScreen: User data received -> ${widget.userData}');
-    debugPrint('MainScreen: Preparing UI for user: ${widget.userData['email'] ?? 'unknown email'}');
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    debugPrint('MainScreen: didChangeDependencies -> dependencies changed.');
-  }
-
-  @override
-  void dispose() {
-    debugPrint('MainScreen: dispose -> cleaning up resources.');
-    super.dispose();
   }
 
   void _onNavTap(int index) {
@@ -63,12 +57,14 @@ class _MainScreenState extends State<MainScreen> {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Settings tapped (placeholder)')));
         },
       ),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: [
-          HomePage(userData: widget.userData),
-          OrdersPage(userData: widget.userData),
-        ],
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 360),
+        transitionBuilder: (child, animation) {
+          // Fade + small slide for a modern feel
+          final offsetAnim = Tween<Offset>(begin: const Offset(0.02, 0), end: Offset.zero).animate(animation);
+          return SlideTransition(position: offsetAnim, child: FadeTransition(opacity: animation, child: child));
+        },
+        child: _pages[_currentIndex](widget.userData),
       ),
       bottomNavigationBar: CustomBottomNav(
         initialIndex: _currentIndex,
@@ -82,6 +78,7 @@ class _MainScreenState extends State<MainScreen> {
           debugPrint('MainScreen: FAB pressed (placeholder action).');
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('FAB pressed (placeholder)')));
         },
+        backgroundColor: brandColor,
         child: const Icon(Icons.add),
       ),
     );
@@ -96,13 +93,14 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     debugPrint('HomePage: build -> rendering Home for user ${userData['email'] ?? 'unknown'}');
     return SafeArea(
+      key: const ValueKey('home_page'),
       child: Center(
         child: Padding(
           padding: const EdgeInsets.all(18.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.home_outlined, size: 64),
+              Icon(Icons.home_outlined, size: 64, color: Theme.of(context).primaryColor),
               const SizedBox(height: 12),
               const Text('Home', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
@@ -125,6 +123,7 @@ class OrdersPage extends StatelessWidget {
   Widget build(BuildContext context) {
     debugPrint('OrdersPage: build -> rendering Orders for user ${userData['email'] ?? 'unknown'}');
     return SafeArea(
+      key: const ValueKey('orders_page'),
       child: Center(
         child: Padding(
           padding: const EdgeInsets.all(18.0),

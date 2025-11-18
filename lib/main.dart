@@ -1,13 +1,24 @@
 // lib/main.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:lottie/lottie.dart';
 import 'firebase_options.dart';
 import 'screens/signup_screen.dart';
 
+const Color brandColor = Color(0xFFF3692F);
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Make the system status bar match the app background (top bar with time/battery).
+  // This ensures the status bar uses the same brand color and shows light icons.
+  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    statusBarColor: brandColor,
+    statusBarIconBrightness: Brightness.light,
+    statusBarBrightness: Brightness.dark,
+  ));
 
   debugPrint('=== App Launch ===');
   debugPrint('Step 1/3: Starting Firebase initialization...');
@@ -42,7 +53,7 @@ class MyApp extends StatelessWidget {
       title: 'BoxHub',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // Brand color #4A148C
+        // Brand color seed
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF4A148C)),
         useMaterial3: true,
         scaffoldBackgroundColor: Colors.white,
@@ -60,18 +71,34 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
   bool _navigated = false;
 
-  // fallback to avoid stuck splash (longer to let animation play)
+  // fallback to avoid stuck splash (keeps a little longer to allow animation play)
   static const Duration fallbackDuration = Duration(seconds: 8);
+
+  late final AnimationController _scaleController;
+  late final Animation<double> _scaleAnim;
 
   @override
   void initState() {
     super.initState();
     debugPrint('Splash: initState -> starting splash screen.');
 
-    // safety fallback
+    // Entrance / subtle breathing animation for the Lottie
+    _scaleController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400));
+    _scaleAnim = Tween<double>(begin: 0.90, end: 1.06).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
+    );
+
+    // Start with a single pop then gentle repeat
+    _scaleController.forward().whenComplete(() {
+      if (mounted && !_scaleController.isAnimating) {
+        _scaleController.repeat(reverse: true);
+      }
+    });
+
+    // Safety fallback in case the animation or navigation gets stuck
     Future.delayed(fallbackDuration, () {
       if (!_navigated) {
         debugPrint('Splash: Fallback timeout reached (${fallbackDuration.inSeconds}s). Navigating to SignUp.');
@@ -84,6 +111,13 @@ class _SplashScreenState extends State<SplashScreen> {
     if (_navigated) return;
     _navigated = true;
     debugPrint('Splash: Navigating to SignUp. Reason: $reason');
+
+    // stop animations cleanly before navigating
+    try {
+      _scaleController.stop();
+    } catch (_) {}
+
+    if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => SignUpScreen(firebaseInitialized: widget.firebaseInitialized),
@@ -92,39 +126,73 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   @override
+  void dispose() {
+    _scaleController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    const brandColor = Color(0xFF4A148C);
+    final media = MediaQuery.of(context);
+    final width = media.size.width;
+    final height = media.size.height;
+
+    // Responsive size calculation:
+    // Increase the Lottie size slightly compared to the previous implementation.
+    // Use a bit larger multipliers and allow larger max size.
+    final double base = width * 0.96;
+    final double alt = height * 0.62;
+    double size = (base < alt ? base : alt);
+    size = size.clamp(200.0, 640.0); // min 200, max 640 (bigger animation)
+
+    // small top padding on tall screens so text remains visible on shorter phones
+    final topPadding = (height > 750) ? 48.0 : 20.0;
 
     return Scaffold(
       backgroundColor: brandColor,
       body: SafeArea(
         child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Bigger Lottie animation (dominant)
-              SizedBox(
-                width: MediaQuery.of(context).size.width * 0.78, // responsive large size
-                height: MediaQuery.of(context).size.width * 0.78,
-                child: _buildLottieAnimation(),
+          child: SingleChildScrollView(
+            // prevent scroll flicker but allow layout to shrink on very small screens
+            physics: const NeverScrollableScrollPhysics(),
+            child: Padding(
+              padding: EdgeInsets.only(top: topPadding, left: 20, right: 20, bottom: 28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Animated scale wrapper for the Lottie animation
+                  SizedBox(
+                    width: size,
+                    height: size,
+                    child: ScaleTransition(
+                      scale: _scaleAnim,
+                      child: _buildLottieAnimation(),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Tagline — keep accessible & responsive
+                  const Text(
+                    'Fast • Secure • Reliable',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Small loading indicator (dots) — remains visible on all devices
+                  const SizedBox(
+                    height: 28,
+                    child: Center(child: _DotLoader()),
+                  ),
+                ],
               ),
-              const SizedBox(height: 20),
-              const Text(
-                'Fast • Secure • Reliable',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 12),
-              // small loading indicator (dots)
-              const SizedBox(height: 6),
-              const SizedBox(
-                height: 28,
-                child: Center(child: _DotLoader()), // simple dot loader
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -138,13 +206,15 @@ class _SplashScreenState extends State<SplashScreen> {
     return Lottie.asset(
       assetPath,
       fit: BoxFit.contain,
+      // When Lottie loads we wait its duration then navigate
       onLoaded: (composition) {
         final dur = composition.duration;
         debugPrint('Splash: Animation loaded. Duration = ${dur.inSeconds}s.');
-        debugPrint('Splash: Playing animation now.');
 
-        // wait animation then navigate (small buffer)
-        Future.delayed(dur + const Duration(milliseconds: 500), () {
+        // Safety: if duration is zero or odd, use a fallback short wait
+        final wait = (dur.inMilliseconds > 0) ? dur + const Duration(milliseconds: 500) : const Duration(seconds: 2);
+
+        Future.delayed(wait, () {
           if (!_navigated) {
             debugPrint('Splash: Animation completed. Navigating to SignUp.');
             _goToSignUp(reason: 'animation_completed');
@@ -157,13 +227,12 @@ class _SplashScreenState extends State<SplashScreen> {
         Future.delayed(const Duration(seconds: 1), () {
           if (!_navigated) _goToSignUp(reason: 'animation_error');
         });
-        return const Center(child: Icon(Icons.local_shipping, size: 92, color: Colors.white70));
+        return const Center(child: Icon(Icons.local_shipping, size: 112, color: Colors.white70));
       },
     );
   }
 }
 
-/// Small dot loader widget
 class _DotLoader extends StatefulWidget {
   const _DotLoader({Key? key}) : super(key: key);
 
